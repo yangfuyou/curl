@@ -205,6 +205,11 @@ class Curl
         return $this->_exec($this->buildUrl($url, $params));
     }
 
+    // RFC7231
+    public function delete($url, $params = []) {
+        $this->setOption(CURLOPT_CUSTOMREQUEST, 'DELETE');
+        return $this->_exec($this->buildUrl($url, $params));
+    }
 }
 
 
@@ -222,8 +227,11 @@ $obj = new Curl();
 // }
 // print_r(json_decode($ret,true));
 
-$ret = $obj->put('http://localhost/git/curl/demo.php?id=3',file_get_contents('https://www.baidu.com'),['username'=>'abc']);
+// $ret = $obj->put('http://localhost/git/curl/demo.php?id=3',file_get_contents('https://www.baidu.com'),['username'=>'abc']);
 // if (substr($ret,0,1)!='{') {//utf8-bom
 //     $ret = substr($ret,3);
 // }
-print_r(json_decode($ret,true));
+// print_r(json_decode($ret,true));
+
+$ret = $obj->delete('http://localhost/git/curl/demo.php',['username'=>'abc']);
+print_r($ret);
