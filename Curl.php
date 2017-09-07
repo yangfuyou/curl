@@ -210,6 +210,18 @@ class Curl
         $this->setOption(CURLOPT_CUSTOMREQUEST, 'DELETE');
         return $this->_exec($this->buildUrl($url, $params));
     }
+
+    // RFC7231
+    public function trace($url, $params = []) {
+        $f = fopen('php://temp', 'w+');
+        $this->setOption(CURLOPT_CUSTOMREQUEST, 'TRACE');
+        $this->setOption(CURLOPT_VERBOSE, true);
+        $this->setOption(CURLOPT_STDERR, $f); 
+        $this->_exec($this->buildUrl($url, $params));
+        rewind($f);
+        return stream_get_contents($f);
+    }
+
 }
 
 
@@ -233,5 +245,8 @@ $obj = new Curl();
 // }
 // print_r(json_decode($ret,true));
 
-$ret = $obj->delete('http://localhost/git/curl/demo.php',['username'=>'abc']);
+// $ret = $obj->delete('http://localhost/git/curl/demo.php',['username'=>'abc']);
+// print_r($ret);
+
+$ret = $obj->trace('http://localhost/git/curl/demo.php',['username'=>'abc']);
 print_r($ret);
