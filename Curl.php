@@ -134,10 +134,8 @@ class Curl
         if($ret === false){
             $this->_error_code = curl_errno($this->_ch);
             $this->_error_string = curl_error($this->_ch);
-            curl_close($this->_ch); 
         }else{
             $this->_info = curl_getinfo($this->_ch);
-            curl_close($this->_ch);
             return $ret;
         }
         return false;   
@@ -160,17 +158,39 @@ class Curl
 
     public function getQueue() {
         return $this->_queue;
+    }
+
+    public function closeCurl() {
+        curl_close($this->_ch);
     }    
 
+    // RFC7231
     public function get($url, $params = []) {
         $this->setOption(CURLOPT_HTTPGET, true);
         return $this->_exec($this->buildUrl($url, $params));
     }
+
+    // RFC7231
+    public function head($url, $params = []) {
+        // 设置请求头, 有时候需要,有时候不用,看请求网址是否有对应的要求
+        $this->setHeaders([["Content-type:"=>"application/x-www-form-urlencoded"]]);
+        $this->setOption(CURLOPT_HEADER, true);
+        $this->setOption(CURLOPT_NOBODY, true);
+        return $this->_exec($this->buildUrl($url, $params));
+    }
+
+
 }
 
 
 $obj = new Curl();
-$ret = $obj->get('http://www.baidu.com/');
-print_r($obj->getInfo());
+echo '<pre>';
+// $ret = $obj->get('http://www.baidu.com/');
+// print_r($ret);
+
+$ret = $obj->head('http://www.baidu.com/');
 print_r($ret);
+
+
+
 
