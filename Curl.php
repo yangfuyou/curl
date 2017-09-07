@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  *  @file       Curl.php
  *  @author     laipiyang <462166282@qq.com>
@@ -171,26 +171,43 @@ class Curl
     }
 
     // RFC7231
-    public function head($url, $params = []) {
+    public function head($url) {
         // 设置请求头, 有时候需要,有时候不用,看请求网址是否有对应的要求
         $this->setHeaders([["Content-type:"=>"application/x-www-form-urlencoded"]]);
         $this->setOption(CURLOPT_HEADER, true);
         $this->setOption(CURLOPT_NOBODY, true);
-        return $this->_exec($this->buildUrl($url, $params));
+        return $this->_exec($this->buildUrl($url, []));
     }
 
+    // RFC7231
+    public function post($url, $params = []) {
+        $this->setOption(CURLOPT_POST, true);
+        $this->setOption(CURLOPT_HEADER, false);
+        // If value is an array, the Content-Type header will be set to multipart/form-data. 
+        if(is_array($params)){
+            $paramsString = http_build_query($params);
+        }else if(is_string($params)){
+            $paramsString = $params;
+        }
+        $this->setOption(CURLOPT_POSTFIELDS, $paramsString);
+        return $this->_exec($url);
+    }
 
 }
 
 
 $obj = new Curl();
-echo '<pre>';
-// $ret = $obj->get('http://www.baidu.com/');
+// echo '<pre>';
+// $ret = $obj->get('http://localhost/git/curl/demo.php',['username'=>'abc']);
 // print_r($ret);
 
-$ret = $obj->head('http://www.baidu.com/');
-print_r($ret);
+// $ret = $obj->head('http://localhost/git/curl/demo.php');
+// print_r($ret);
 
-
+$ret = $obj->post('http://localhost/git/curl/demo.php',['username'=>'abc']);
+// if (substr($ret,0,1)!='{') {//utf8-bom
+//     $ret = substr($ret,3);
+// }
+print_r(json_decode($ret,true));
 
 
