@@ -193,6 +193,18 @@ class Curl
         return $this->_exec($url);
     }
 
+    // RFC7231
+    public function put($url, $data, $params = []) {
+        // write to memory/temp
+        $f = fopen('php://temp', 'rw+');
+        fwrite($f, $data);
+        rewind($f);
+        $this->setOption(CURLOPT_PUT, true);
+        $this->setOption(CURLOPT_INFILE, $f);
+        $this->setOption(CURLOPT_INFILESIZE, strlen($data));
+        return $this->_exec($this->buildUrl($url, $params));
+    }
+
 }
 
 
@@ -204,10 +216,14 @@ $obj = new Curl();
 // $ret = $obj->head('http://localhost/git/curl/demo.php');
 // print_r($ret);
 
-$ret = $obj->post('http://localhost/git/curl/demo.php',['username'=>'abc']);
+// $ret = $obj->post('http://localhost/git/curl/demo.php',['username'=>'abc']);
+// if (substr($ret,0,1)!='{') {//utf8-bom
+//     $ret = substr($ret,3);
+// }
+// print_r(json_decode($ret,true));
+
+$ret = $obj->put('http://localhost/git/curl/demo.php?id=3',file_get_contents('https://www.baidu.com'),['username'=>'abc']);
 // if (substr($ret,0,1)!='{') {//utf8-bom
 //     $ret = substr($ret,3);
 // }
 print_r(json_decode($ret,true));
-
-
