@@ -101,7 +101,7 @@ class Curl
         return $this;
     }
 
-    public function buildUrl($url, Array $data) {
+    private function buildUrl($url, Array $data) {
         $parsed = parse_url($url);
         isset($parsed['query']) ? parse_str($parsed['query'], $parsed['query']) : $parsed['query'] = [] ;
         $params = isset($parsed['query']) ? array_merge($parsed['query'], $data) : $data;
@@ -222,9 +222,21 @@ class Curl
         return stream_get_contents($f);
     }
 
+    // RFC7231
+    public function options($url, $params = []) {
+        $this->setOption(CURLOPT_CUSTOMREQUEST, 'OPTIONS');
+        return $this->_exec($this->buildUrl($url, $params));
+    }
+
+    // RFC5789
+    public function patch($url, $params = []) {
+        $this->setOption(CURLOPT_CUSTOMREQUEST, 'PATCH');
+        return $this->_exec($this->buildUrl($url, $params));
+    }
+
 }
 
-
+header('Content-Type:text/html;charset=utf8');
 $obj = new Curl();
 // echo '<pre>';
 // $ret = $obj->get('http://localhost/git/curl/demo.php',['username'=>'abc']);
@@ -248,5 +260,5 @@ $obj = new Curl();
 // $ret = $obj->delete('http://localhost/git/curl/demo.php',['username'=>'abc']);
 // print_r($ret);
 
-$ret = $obj->trace('http://localhost/git/curl/demo.php',['username'=>'abc']);
-print_r($ret);
+// $ret = $obj->trace('http://localhost/git/curl/demo.php',['username'=>'abc']);
+// print_r($ret);
