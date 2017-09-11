@@ -12,10 +12,13 @@ class Curl
     private $_ch;
     private $_options;
     private $_config = [
+        CURLOPT_HEADER         => false,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_AUTOREFERER    => true,
         CURLOPT_CONNECTTIMEOUT => 10,
         CURLOPT_TIMEOUT        => 30,
+        CURLOPT_ENCODING       => '',
+        CURLOPT_IPRESOLVE      => 1,
         CURLOPT_SSL_VERIFYPEER => false,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_MAXREDIRS => 5,
@@ -234,10 +237,26 @@ class Curl
         return $this->_exec($this->buildUrl($url, $params));
     }
 
-}
+    //upload
+    public function upload($url, $file, $type, $name) {
+        #$file must be the full path
+        if (class_exists('CURLFile', false)) {
+            $this->setOption(CURLOPT_SAFE_UPLOAD, true);
+            $data = ['pic' => new CURLFile(realpath($file), $type, $name)];
+        } else {
+            $data['pic']='@'.realpath($file).";type=".$type.";filename=".$name;
+        }
+        $this->setOption(CURLOPT_POST, true);
+        $this->setOption(CURLOPT_POSTFIELDS, $data);
+        return $this->_exec($url);
+    }
 
+}
+ini_set('display_errors', '1');
+error_reporting(E_ALL);
 header('Content-Type:text/html;charset=utf8');
-$obj = new Curl();
+
+// $obj = new Curl();
 // echo '<pre>';
 // $ret = $obj->get('http://localhost/git/curl/demo.php',['username'=>'abc']);
 // print_r($ret);
@@ -262,3 +281,25 @@ $obj = new Curl();
 
 // $ret = $obj->trace('http://localhost/git/curl/demo.php',['username'=>'abc']);
 // print_r($ret);
+
+if($_FILES) {
+    $tmpname = $_FILES['fname']['name'];
+    $tmpfile = $_FILES['fname']['tmp_name'];
+    $tmpType = $_FILES['fname']['type'];
+    $tmp_file = __DIR__.'/'.$tmpname;
+    move_uploaded_file($tmpfile, $tmp_file);
+
+    $obj = new Curl();
+    $ret = $obj->upload('http://localhost/git/curl/demo.php', $tmp_file, $tmpType, $tmpname);
+    unlink($tmp_file);
+    print_r($ret);
+    exit;    
+}
+
+?>
+<form method="POST" action="" enctype="multipart/form-data">
+<p>Select a file to upload : </p>
+<input type="file" name="fname">
+<input type="submit" name="check_submit"/>
+</form>
+
