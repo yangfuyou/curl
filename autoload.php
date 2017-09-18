@@ -1,7 +1,7 @@
 ﻿<?php
 
 function __autoload($class){
-    include $class.'.php';
+    include 'src/'.$class.'.php';
 }
 
 spl_autoload_register('__autoload');
