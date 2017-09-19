@@ -8,7 +8,9 @@ require __DIR__ . '/../../autoload.php';
 use \Curl\Curl;
 
 $curl = new Curl();
-// $ret = $curl->download('http://localhost/git/curl/examples/resource/me.jpg', 'b.jpg');
-$ret = $curl->setMaxFilesize(10*1024*1024)->download('http://localhost/git/curl/a.rar', 'b.rar');
-var_dump($ret);   
 
+$ret = $curl->download('https://www.amazingjokes.com/img/2014/530c9613d29bd_CountvonCount.jpg','bb.jpg');
+// var_dump($ret);   
+
+// $ret = $curl->setMaxFilesize(11024)->download('https://www.amazingjokes.com/img/2014/530c9613d29bd_CountvonCount.jpg','b.jpg');
+// var_dump($ret); 

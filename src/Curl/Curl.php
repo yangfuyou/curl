@@ -40,6 +40,7 @@ class Curl
     private $_err = [];
 
     private $_chunked_from = 0;
+    private $_chunked_size = 4096;
 
     private $_request = [];
 
@@ -52,8 +53,6 @@ class Curl
     private $_reader_callback_data = '';
 
     private $_raw;
-
-    
 
     private $_json_pattern = '/^(?:application|text)\/(?:[a-z]+(?:[\.-][0-9a-z]+){0,}[\+\.]|x-)?json(?:-[a-z]+)?/i';
     
@@ -271,7 +270,12 @@ class Curl
     }
 
     public function setChunkFrom($from = 0) {
-        $this->_chunked_from = $from;
+        $this->_chunked_from = intval($from);
+        return $this;
+    }
+
+    public function setChunkSize($size = 4096) {
+        $this->_chunked_size = intval($size);
         return $this;
     }
 
@@ -397,6 +401,7 @@ class Curl
         if (isset($this->_response['headers']['Status-Line'])) {
             $this->_err['http']['msg'] = $this->_response['headers']['Status-Line'];
         }
+
         return $this;
     }
 
@@ -541,14 +546,15 @@ class Curl
 
     private function exec() {
         try{
-            $this->_curl = curl_init();           
+            $this->_curl = curl_init();        
             $this->makeUrl()->makeHeaders()->setHeaderCallback()->setOpts();
 
             $content = curl_exec($this->_curl);
+            curl_reset($this->_curl);
             if ($content) {
                 $this->_raw = $content;
             }
-            // var_dump($this);exit;
+
             return $this;
         }catch(\Exception $e){
             throw new \Exception('Curl not installed');
@@ -679,19 +685,26 @@ class Curl
 
     //download
     public function download($url, $file) {
-        if (is_file($file)) {
-            $this->setChunkFrom(filesize($file))->setOption(CURLOPT_RANGE, $this->_chunked_from.'-');
-        }
-        $this->setUrl($url, [])->setOption(CURLOPT_FILE, $this->writeFile($file))->setMethod('download')->exec()->handle();
+        $this->setUrl($url, [])->setOption(CURLOPT_FILE, fopen($file, "a"))->setMethod('download')->exec()->handle();
         return !$this->_error;
     }
 
-    private function writeFile($file) {
-        $mode = file_exists($file) ? 'ab' : 'wb';
-        $fp = fopen($file, $mode);
-        fseek($fp, $this->_chunked_from);
-        return $fp;        
+    //downloading
+    public function downloading($url, $file) {
+        if (file_exists($file)) {
+            $this->setChunkFrom(filesize($file))->setOption(CURLOPT_RANGE, $this->_chunked_from.'-'.($this->_chunked_from+$this->_chunked_size));
+        } else {
+            $this->setOption(CURLOPT_RANGE, '0-'.$this->_chunked_size);
+        }
+        $this->download($url, $file);
+        $size = $this->getHeader('Content-Range');
+        if($size) {
+            $size = preg_split('#[-/]#',$size);
+            return $size[2] <= $size[1]+1;
+        }
+        return !$this->_err['curl']['code'];
     }
+ 
 }
 
 ?>
